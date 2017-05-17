@@ -1,0 +1,33 @@
+version: "3"
+services:
+  #https://github.com/jwilder/nginx-proxy
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
+    hostname: nginx-proxy
+    ports:
+      - "8389:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro  
+      - ./volumes/nginx-proxy/etc/nginx/htpasswd:/etc/nginx/htpasswd
+      - ./volumes/nginx-proxy/etc/nginx/certs:/etc/nginx/certs
+  solr:
+    build:
+      context: .
+      dockerfile: Dockerfile-solr-4
+    image: avblink/solr-4
+    hostname: solr
+    restart: always
+    environment:
+      - SOLR_SOLR_MEM_SIZE=512m
+      - PARTIAL_SEARCH_ENABLED=false
+    # Uncomment if you want to directly access solr on this port avoiding nginx-proxy
+    #ports:
+    #  - "8983:8983"
+    environment:
+      - VIRTUAL_HOST=127.0.0.1,localhost
+    volumes:
+        - ./volumes/solr/opt/solr/example/solr/collection1/data:/opt/solr/example/solr/collection1/data
+        - ./volumes/solr/opt/solr/example/solr/collection1/conf:/opt/solr/example/solr/collection1/conf
+        - ./volumes/solr/supervisor:/var/log/supervisor/
